@@ -7,6 +7,10 @@ router.get('/', function(req, res) {
   res.render('index', { title: 'Express' });
 });
 
+router.get('/test', function(req, res) {
+  res.send("1");
+});
+
 router.get("/scan/:id", function(req, res) {
     res.setHeader('Content-Type', 'application/json');
 
