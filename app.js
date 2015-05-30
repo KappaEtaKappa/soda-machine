@@ -4,6 +4,9 @@ var favicon = require('static-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
+var r = require('rethinkdb');
+
+var config = require(__dirname+"/config.js")
 
 var routes = require('./routes/index');
 var users = require('./routes/users');
@@ -20,6 +23,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded());
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(createConnection);  
 
 app.use('/', routes);
 app.use('/users', users);
@@ -30,6 +34,26 @@ app.use(function(req, res, next) {
     err.status = 404;
     next(err);
 });
+
+
+function handleError(res, error) {
+    return res.send(500, {error: error.message});
+}
+
+
+function createConnection(req, res, next) {
+    r.connect(config.rethinkdb, function(error, conn) {
+        if (error) {
+            handleError(res, error);
+        }
+        else {
+            // Save the connection in `req`
+            req._rdbConn = conn;
+            // Pass the current request to the next middleware
+            next();
+        }
+    });
+}
 
 /// error handlers
 
@@ -54,6 +78,5 @@ app.use(function(err, req, res, next) {
         error: {}
     });
 });
-
 
 module.exports = app;
