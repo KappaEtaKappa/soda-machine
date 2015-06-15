@@ -6,6 +6,7 @@ module.exports = {
     db: 'members'
   },
   express: {
-     port: 3000
+     port: 3000,
+	sodaCost: .50
   }
 };

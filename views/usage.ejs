@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Soda Machine Usage</title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+    <link rel="stylesheet" type="text/css" href="/bower_components/bootstrap/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="/bower_components/bootstrap/dist/css/bootstrap-theme.min.css">
+    <script type="text/javascript" src="/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+  </head>
+  <body>
+    <h1>Soda Machine Usage</h1>
+    <% for (var i = 0; i < months.length; i++) { %>
+    	<h3>
+    		<%= months[i].name %>
+    	</h3>
+    	<dl class="dl-horizontal">
+    	<% for (var key in months[i].usage) { %>
+    		<dt><%= key %></dt><dd><%= "$" + months[i].usage[key].toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,') %></li>
+    	<% } %>
+    	</dl>
+    <% }; %>
+  </body>
+</html>
