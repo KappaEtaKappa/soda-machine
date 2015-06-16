@@ -5,16 +5,22 @@ volatile int bitCount = 0;
 void ISRone(void)
 {
   lastBitArrivalTime = millis();
-  bitCount++;
+  
+  if(bitCount >= 14 && bitCount <=33){
   tagID <<= 1;
   tagID |= 1;
+  }
+  bitCount++;
 }
 
 void ISRzero(void)
 {
   lastBitArrivalTime = millis();
-  bitCount++;
+  if(bitCount >= 14 && bitCount <=33){
   tagID <<= 1;
+  }
+  bitCount++;
+  
 }
 
 void setup()

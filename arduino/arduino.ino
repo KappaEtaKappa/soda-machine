@@ -1,21 +1,34 @@
-/*
-  Web client
- 
- This sketch connects to a website (http://www.google.com)
- using an Arduino Wiznet Ethernet shield. 
- 
- Circuit:
- * Ethernet shield attached to pins 10, 11, 12, 13
- 
- created 18 Dec 2009
- by David A. Mellis
- modified 9 Apr 2012
- by Tom Igoe, based on work by Adrian McEwen
- 
- */
-
 #include <SPI.h>
 #include <Ethernet.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+volatile unsigned long tagID = 0;
+volatile unsigned long lastBitArrivalTime;
+volatile int bitCount = 0;
+int mode = 0;
+
+void ISRone(void)
+{
+  lastBitArrivalTime = millis();
+  
+  if(bitCount >= 14 && bitCount <=33){
+  tagID <<= 1;
+  tagID |= 1;
+  }
+  bitCount++;
+}
+
+void ISRzero(void)
+{
+  lastBitArrivalTime = millis();
+  if(bitCount >= 14 && bitCount <=33){
+  tagID <<= 1;
+  }
+  bitCount++;
+  
+}
+
 
 // Enter a MAC address for your controller below.
 // Newer Ethernet shields have a MAC address printed on a sticker on the shield
@@ -25,7 +38,7 @@ byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
 //IPAddress server(74,125,232,128);  // numeric IP for Google (no DNS)
 
 // Set the static IP address to use if the DHCP fails to assign
-IPAddress server(10,0,0,28);
+IPAddress server(10,0,0,10);
 
 // Initialize the Ethernet client library
 // with the IP address and port of the server 
@@ -35,51 +48,67 @@ EthernetClient client;
 void setup() {
  // Open serial communications and wait for port to open:
   Serial.begin(9600);
-   while (!Serial) {
-    ; // wait for serial port to connect. Needed for Leonardo only
-  }
+
+  pinMode(2, INPUT);
+  digitalWrite(2, HIGH);  // Enable pull-up resistor
+  attachInterrupt(0, ISRzero, FALLING);
+
+  pinMode(3, INPUT);
+  digitalWrite(3, HIGH);  // Enable pull-up resistor
+  attachInterrupt(1, ISRone,  FALLING);
+
+  tagID = 0;
+  bitCount = 0;
+  Serial.print("setup done");
 
 }
 
-int scan = 1;
-int lines = 0;
-int check = 0;
+int lines;
 void loop()
 {
-  if (scan == 1) {
-     checkID();
-     scan = 0; 
+  //  See if it has been more than 1/4 second since the last bit arrived
+  if (mode == 0) {
+    if(bitCount > 0 && millis() - lastBitArrivalTime >  250){
+      Serial.print(bitCount, DEC);
+      Serial.print(" bits: ");
+      Serial.println(tagID);
+      checkID(tagID);
+      tagID = 0;
+      bitCount = 0;
+    }
   }
   // if there are incoming bytes available 
   // from the server, read them and print them:
-  if (client.available()) {
-    char c = client.read();
-    //Serial.print(c);//debug
-    if (c == '\n') {
-      lines++;
-    } else if (lines == 8) { //after http boilerplate junk
-      if (c == '1') {
-        validID();
-      } else if (c == '0') {
-        invalidID();
-      } else {
-        lines++; //no more reading characters 
+  if (mode == 1) {
+    if (client.available()) {
+      char c = client.read();
+//      Serial.print(c);//debug
+      if (c == '\n') {
+        lines++;
+      } else if (lines == 8) { //after http boilerplate junk
+        if (c == '1') {
+          validID();
+      client.stop();
+        } else if (c == '0') {
+          invalidID();
+      client.stop();
+        } else {
+          lines++; //no more reading characters 
+        }
       }
     }
-  }
-
-  // if the server's disconnected, stop the client:
-  if (!client.connected()) {
-    Serial.println("Disconnected");
-    client.stop();
-  
-    // do nothing forevermore:
-    while(true);
+    // if the server's disconnected, stop the client:
+    if (!client.connected()) {
+      Serial.println("Disconnected");
+      client.stop();
+      mode = 0;
+    }
   }
 }
 
-void checkID() {
-
+void checkID(unsigned long id) {
+  mode = 1;
+  lines = 0;
   // start the Ethernet connection:
   if (Ethernet.begin(mac) == 0) {
     Serial.println("Failed to configure Ethernet using DHCP");
@@ -95,8 +124,10 @@ void checkID() {
   if (client.connect(server, 80)) {
     Serial.println("Connected");
     // Make a HTTP request:
-    client.println("GET /test HTTP/1.1");
-    client.println("Host: 10.0.0.28");
+    client.print("GET /scan/");
+    client.print(id);
+    client.println(" HTTP/1.1");
+    client.println("Host: 10.0.0.10");
     client.println("Connection: close");
     client.println();
   } 
