@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define ALLOWSODA 6
+
 volatile unsigned long tagID = 0;
 volatile unsigned long lastBitArrivalTime;
 volatile int bitCount = 0;
@@ -48,6 +50,10 @@ EthernetClient client;
 void setup() {
  // Open serial communications and wait for port to open:
   Serial.begin(9600);
+  
+  
+  pinMode(ALLOWSODA, OUTPUT); //allow soda
+  digitalWrite(ALLOWSODA, LOW);
 
   pinMode(2, INPUT);
   digitalWrite(2, HIGH);  // Enable pull-up resistor
@@ -66,6 +72,7 @@ void setup() {
 int lines;
 void loop()
 {
+//  Serial.println(bitCount);
   //  See if it has been more than 1/4 second since the last bit arrived
   if (mode == 0) {
     if(bitCount > 0 && millis() - lastBitArrivalTime >  250){
@@ -88,10 +95,12 @@ void loop()
       } else if (lines == 8) { //after http boilerplate junk
         if (c == '1') {
           validID();
-      client.stop();
+          client.stop();
+          mode = 0;
         } else if (c == '0') {
           invalidID();
-      client.stop();
+          client.stop();
+          mode = 0;
         } else {
           lines++; //no more reading characters 
         }
@@ -141,6 +150,9 @@ void invalidID() {
    Serial.println("Invalid ID");
 }
 void validID() {
-   Serial.println("Valid ID");
+  Serial.println("Valid ID");
+  digitalWrite(ALLOWSODA, HIGH);
+  delay(1000);
+  digitalWrite(ALLOWSODA, LOW);
 }
 
