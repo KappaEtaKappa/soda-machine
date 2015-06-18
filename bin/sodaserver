@@ -33,23 +33,25 @@ net.createServer(function(sock) {
 		var id = data + "";
 		id = id.trim();
 		console.log("id: " + id);
-	 	r.table('members').get(id).run(dbconn, function(error, value) {
-	        if (error) {
-	        	console.log("Error: " + error);
-	        }  else {
-	        	console.log(value);
-	        	if (value != null) {
-	        		r.table('purchases').insert({memberid: id, amount: config.express.sodaCost, timestamp: new Date()}).run(dbconn, function(error, value) {
-				        if (error) {
-				        	handleError(res, error);
-				        }
-						sock.write("1");
-				    });
-	        	} else {
-					sock.write("0");
-	        	}
-	        }
-	    });
+		if (id.length >= 6) {
+		 	r.table('members').get(id).run(dbconn, function(error, value) {
+		        if (error) {
+		        	console.log("Error: " + error);
+		        }  else {
+		        	console.log(value);
+		        	if (value != null) {
+		        		r.table('purchases').insert({memberid: id, amount: config.express.sodaCost, timestamp: new Date()}).run(dbconn, function(error, value) {
+					        if (error) {
+					        	handleError(res, error);
+					        }
+							sock.write("1");
+					    });
+		        	} else {
+						sock.write("0");
+		        	}
+		        }
+		    });
+		 }
         
     });
     
