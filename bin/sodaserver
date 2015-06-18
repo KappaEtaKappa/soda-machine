@@ -1,0 +1,67 @@
+#!/usr/bin/env node
+var net = require("net");
+var config = require(__dirname+"/../config.js")
+
+var r = require('rethinkdb');
+
+var PORT = 8124;
+var HOST = "localhost";
+
+var net = require('net');
+
+
+var dbconn;
+r.connect(config.rethinkdb, function(error, conn) {
+    if (error) {
+        handleError(res, error);
+    }
+    dbconn = conn;
+});
+
+// Create a server instance, and chain the listen function to it
+// The function passed to net.createServer() becomes the event handler for the 'connection' event
+// The sock object the callback function receives UNIQUE for each connection
+net.createServer(function(sock) {
+    
+    // We have a connection - a socket object is assigned to the connection automatically
+    console.log('CONNECTED: ' + sock.remoteAddress +':'+ sock.remotePort);
+    
+    var line = "";
+    // Add a 'data' event handler to this instance of socket
+    sock.on('data', function(data) {
+        if (data != "\n") {
+        	line = line + data;
+        } else {
+			// sock.write('You said "' + line + '"');
+			var id = line;
+		 	r.table('members').get(id).run(dbconn, function(error, value) {
+		        if (error) {
+		            handleError(res, error);
+		        }  else {
+		        	if (value != null) {
+		        		r.table('purchases').insert({memberid: id, amount: config.express.sodaCost, timestamp: new Date()}).run(dbconn, function(error, value) {
+					        if (error) {
+					        	handleError(res, error);
+					        }
+							sock.write("1");
+					    });
+		        	} else {
+						sock.write("0");
+		        	}
+		        }
+		    });
+        	line = "";
+        }
+        console.log('DATA ' + sock.remoteAddress + ': ' + data);
+        // Write the data back to the socket, the client will receive it as data from the server
+        
+    });
+    
+    // Add a 'close' event handler to this instance of socket
+    sock.on('close', function(data) {
+        console.log('CLOSED: ' + sock.remoteAddress + ' ' + sock.remotePort);
+    });
+    
+}).listen(PORT, HOST);
+
+console.log('Server listening on ' + HOST +':'+ PORT);

@@ -54,6 +54,11 @@ void setup() {
   
   pinMode(ALLOWSODA, OUTPUT); //allow soda
   digitalWrite(ALLOWSODA, LOW);
+  
+  pinMode(4, OUTPUT); 
+  pinMode(5, OUTPUT); 
+  digitalWrite(4, LOW);
+  digitalWrite(5, HIGH);
 
   pinMode(2, INPUT);
   digitalWrite(2, HIGH);  // Enable pull-up resistor
@@ -89,10 +94,11 @@ void loop()
   if (mode == 1) {
     if (client.available()) {
       char c = client.read();
-//      Serial.print(c);//debug
+      Serial.print(c);//debug
+//      Serial.print(lines);//debug
       if (c == '\n') {
         lines++;
-      } else if (lines == 8) { //after http boilerplate junk
+      } else if (lines == 7) { //after http boilerplate junk
         if (c == '1') {
           validID();
           client.stop();
@@ -132,13 +138,10 @@ void checkID(unsigned long id) {
   // if you get a connection, report back via serial:
   if (client.connect(server, 80)) {
     Serial.println("Connected");
-    // Make a HTTP request:
-    client.print("GET /scan/");
-    client.print(id);
-    client.println(" HTTP/1.1");
-    client.println("Host: 10.0.0.10");
-    client.println("Connection: close");
-    client.println();
+    Serial.print("Checking id ");
+    Serial.println(id);
+    //sent id
+    client.println(id);
   } 
   else {
     // kf you didn't get a connection to the server:
@@ -152,7 +155,7 @@ void invalidID() {
 void validID() {
   Serial.println("Valid ID");
   digitalWrite(ALLOWSODA, HIGH);
-  delay(1000);
+  delay(2000);
   digitalWrite(ALLOWSODA, LOW);
 }
 
