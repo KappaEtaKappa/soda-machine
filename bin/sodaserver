@@ -29,7 +29,7 @@ net.createServer(function(sock) {
     var line = "";
     // Add a 'data' event handler to this instance of socket
     sock.on('data', function(data) {
-
+    	data = data.trim();
 		// sock.write('You said "' + line + '"');
 		var id = data;
 		id = "232519";
