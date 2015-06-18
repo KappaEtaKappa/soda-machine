@@ -83,7 +83,7 @@ void loop()
     if(bitCount > 0 && millis() - lastBitArrivalTime >  250){
       Serial.print(bitCount, DEC);
       Serial.print(" bits: ");
-      Serial.println(tagID);
+      Serial.print(tagID);
       checkID(tagID);
       tagID = 0;
       bitCount = 0;
