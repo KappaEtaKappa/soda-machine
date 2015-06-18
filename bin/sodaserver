@@ -29,29 +29,25 @@ net.createServer(function(sock) {
     var line = "";
     // Add a 'data' event handler to this instance of socket
     sock.on('data', function(data) {
-        if (data != "\n") {
-        	line = line + data;
-        } else {
-			// sock.write('You said "' + line + '"');
-			var id = line;
-		 	r.table('members').get(id).run(dbconn, function(error, value) {
-		        if (error) {
-		            handleError(res, error);
-		        }  else {
-		        	if (value != null) {
-		        		r.table('purchases').insert({memberid: id, amount: config.express.sodaCost, timestamp: new Date()}).run(dbconn, function(error, value) {
-					        if (error) {
-					        	handleError(res, error);
-					        }
-							sock.write("1");
-					    });
-		        	} else {
-						sock.write("0");
-		        	}
-		        }
-		    });
-        	line = "";
-        }
+
+		// sock.write('You said "' + line + '"');
+		var id = data;
+	 	r.table('members').get(id).run(dbconn, function(error, value) {
+	        if (error) {
+	            handleError(res, error);
+	        }  else {
+	        	if (value != null) {
+	        		r.table('purchases').insert({memberid: id, amount: config.express.sodaCost, timestamp: new Date()}).run(dbconn, function(error, value) {
+				        if (error) {
+				        	handleError(res, error);
+				        }
+						sock.write("1");
+				    });
+	        	} else {
+					sock.write("0");
+	        	}
+	        }
+	    });
         console.log('DATA ' + sock.remoteAddress + ': ' + data);
         // Write the data back to the socket, the client will receive it as data from the server
         

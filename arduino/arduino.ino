@@ -95,28 +95,21 @@ void loop()
     if (client.available()) {
       char c = client.read();
       Serial.print(c);//debug
-//      Serial.print(lines);//debug
-      if (c == '\n') {
-        lines++;
-      } else if (lines == 7) { //after http boilerplate junk
-        if (c == '1') {
-          validID();
-          client.stop();
-          mode = 0;
-        } else if (c == '0') {
-          invalidID();
-          client.stop();
-          mode = 0;
-        } else {
-          lines++; //no more reading characters 
-        }
+      if (c == '1') {
+        validID();
+        client.stop();
+        mode = 0;
+      } else if (c == '0') {
+        invalidID();
+        client.stop();
+        mode = 0;
+      } 
+      // if the server's disconnected, stop the client:
+      if (!client.connected()) {
+        Serial.println("Disconnected");
+        client.stop();
+        mode = 0;
       }
-    }
-    // if the server's disconnected, stop the client:
-    if (!client.connected()) {
-      Serial.println("Disconnected");
-      client.stop();
-      mode = 0;
     }
   }
 }
