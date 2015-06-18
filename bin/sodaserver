@@ -44,11 +44,9 @@ net.createServer(function(sock) {
 				        	handleError(res, error);
 				        }
 						sock.write("1");
-						sock.close();
 				    });
 	        	} else {
 					sock.write("0");
-					sock.close();
 	        	}
 	        }
 	    });
