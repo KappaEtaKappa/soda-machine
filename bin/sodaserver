@@ -31,6 +31,7 @@ net.createServer(function(sock) {
     sock.on('data', function(data) {
 		// sock.write('You said "' + line + '"');
 		var id = data + "";
+		id = id.trim();
 		console.log("id: " + id);
 		console.log("data: " + data);
 		console.log("idlength: " + id.length);
