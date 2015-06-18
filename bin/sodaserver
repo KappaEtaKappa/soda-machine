@@ -23,49 +23,48 @@ r.connect(config.rethinkdb, function(error, conn) {
 // The sock object the callback function receives UNIQUE for each connection
 net.createServer(function(sock) {
     
-    // We have a connection - a socket object is assigned to the connection automatically
-    console.log('CONNECTED: ' + sock.remoteAddress +':'+ sock.remotePort);
+    // // We have a connection - a socket object is assigned to the connection automatically
+    // console.log('CONNECTED: ' + sock.remoteAddress +':'+ sock.remotePort);
     
-    var line = "";
-    // Add a 'data' event handler to this instance of socket
-    sock.on('data', function(data) {
-		// sock.write('You said "' + line + '"');
-		var id = data + "";
-		id = id.trim();
-		console.log("id: " + id);
-		console.log("data: " + data);
-		console.log("idlength: " + id.length);
-		console.log("datalength: " + data.length);
-		console.log("equal: " + (id == data));
-		console.log("equal2: " + (id === data));
-		console.log("typeofid: " + (typeof id));
-		console.log("typeofdata: " + (typeof data));
-	 	r.table('members').get(id).run(dbconn, function(error, value) {
-	        if (error) {
-	        	console.log("Error: " + error);
-	        }  else {
-	        	console.log(value);
-	        	if (value != null) {
-	        		r.table('purchases').insert({memberid: id, amount: config.express.sodaCost, timestamp: new Date()}).run(dbconn, function(error, value) {
-				        if (error) {
-				        	handleError(res, error);
-				        }
-						sock.write("1");
-				    });
-	        	} else {
-					sock.write("0");
-	        	}
-	        }
-	    });
-        // Write the data back to the socket, the client will receive it as data from the server
-        
-    });
+    // var line = "";
+
     
-    // Add a 'close' event handler to this instance of socket
-    sock.on('close', function(data) {
-        console.log('CLOSED: ' + sock.remoteAddress + ' ' + sock.remotePort);
-    });
+    // // Add a 'close' event handler to this instance of socket
+    // sock.on('close', function(data) {
+    //     console.log('CLOSED: ' + sock.remoteAddress + ' ' + sock.remotePort);
+    // });
     
 }).listen(PORT, HOST);
+
+server.on('data', function(data) {
+  	var id = data + "";
+  	id = id.trim();
+  	console.log("id: " + id);
+  	console.log("data: " + data);
+  	console.log("idlength: " + id.length);
+  	console.log("datalength: " + data.length);
+  	console.log("equal: " + (id == data));
+  	console.log("equal2: " + (id === data));
+  	console.log("typeofid: " + (typeof id));
+  	console.log("typeofdata: " + (typeof data));
+   	r.table('members').get(id).run(dbconn, function(error, value) {
+          if (error) {
+          	console.log("Error: " + error);
+          }  else {
+          	console.log(value);
+          	if (value != null) {
+          		r.table('purchases').insert({memberid: id, amount: config.express.sodaCost, timestamp: new Date()}).run(dbconn, function(error, value) {
+  			        if (error) {
+  			        	handleError(res, error);
+  			        }
+  					sock.write("1");
+  			    });
+          	} else {
+  				sock.write("0");
+          	}
+          }
+      });
+  server.end();
+});
 
 console.log('Server listening on ' + HOST +':'+ PORT);
