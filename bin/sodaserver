@@ -29,7 +29,6 @@ net.createServer(function(sock) {
     var line = "";
     // Add a 'data' event handler to this instance of socket
     sock.on('data', function(data) {
-    	data = data[0].trim();
 		// sock.write('You said "' + line + '"');
 		var id = data;
 		id = "232519";
@@ -39,6 +38,8 @@ net.createServer(function(sock) {
 		console.log("datalength: " + data.length);
 		console.log("equal: " + (id == data));
 		console.log("equal2: " + (id === data));
+		console.log("typeofid: " + (typeof id));
+		console.log("typeofdata: " + (typeof data));
 	 	r.table('members').get(id).run(dbconn, function(error, value) {
 	        if (error) {
 	        	console.log("Error: " + error);
