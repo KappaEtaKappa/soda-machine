@@ -32,13 +32,14 @@ net.createServer(function(sock) {
 
 		// sock.write('You said "' + line + '"');
 		var id = data;
+		id = "232519";
 		console.log("id: " + id);
 		console.log("length: " + id.length);
 	 	r.table('members').get(id).run(dbconn, function(error, value) {
 	        if (error) {
 	        	console.log("Error: " + error);
 	        }  else {
-	        	console.log(value);;
+	        	console.log(value);
 	        	if (value != null) {
 	        		r.table('purchases').insert({memberid: id, amount: config.express.sodaCost, timestamp: new Date()}).run(dbconn, function(error, value) {
 				        if (error) {
