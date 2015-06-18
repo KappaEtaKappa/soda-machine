@@ -34,7 +34,9 @@ net.createServer(function(sock) {
 		var id = data;
 		id = "232519";
 		console.log("id: " + id);
-		console.log("length: " + id.length);
+		console.log("data: " + data);
+		console.log("idlength: " + id.length);
+		console.log("datalength: " + data.length);
 		console.log("equal: " + (id == data));
 		console.log("equal2: " + (id === data));
 	 	r.table('members').get(id).run(dbconn, function(error, value) {
@@ -54,7 +56,6 @@ net.createServer(function(sock) {
 	        	}
 	        }
 	    });
-        console.log('DATA ' + sock.remoteAddress + ': "' + data + "\"");
         // Write the data back to the socket, the client will receive it as data from the server
         
     });
