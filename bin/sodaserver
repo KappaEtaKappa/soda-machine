@@ -33,6 +33,7 @@ net.createServer(function(sock) {
 		// sock.write('You said "' + line + '"');
 		var id = data;
 		console.log("id: " + id);
+		console.log("length: " + id.length);
 	 	r.table('members').get(id).run(dbconn, function(error, value) {
 	        if (error) {
 	        	console.log("Error: " + error);
