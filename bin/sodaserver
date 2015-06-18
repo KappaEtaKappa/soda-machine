@@ -4,8 +4,8 @@ var config = require(__dirname+"/../config.js")
 
 var r = require('rethinkdb');
 
-var PORT = 8124;
-var HOST = "localhost";
+var PORT = 80;
+var HOST = "10.0.0.10";
 
 var net = require('net');
 
