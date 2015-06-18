@@ -129,7 +129,7 @@ void checkID(unsigned long id) {
   Serial.println("Connecting...");
 
   // if you get a connection, report back via serial:
-  if (client.connect(server, 80)) {
+  if (client.connect(server, 8124)) {
     Serial.println("Connected");
     Serial.print("Checking id ");
     Serial.println(id);
