@@ -34,7 +34,7 @@ net.createServer(function(sock) {
 		var id = data;
 	 	r.table('members').get(id).run(dbconn, function(error, value) {
 	        if (error) {
-	            handleError(res, error);
+	        	console.log("Error: " + error);
 	        }  else {
 	        	if (value != null) {
 	        		r.table('purchases').insert({memberid: id, amount: config.express.sodaCost, timestamp: new Date()}).run(dbconn, function(error, value) {
