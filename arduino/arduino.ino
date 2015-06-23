@@ -9,6 +9,7 @@ volatile unsigned long tagID = 0;
 volatile unsigned long lastBitArrivalTime;
 volatile int bitCount = 0;
 int mode = 0;
+int timeKeeper;
 
 void ISRone(void)
 {
@@ -70,8 +71,12 @@ void setup() {
 
   tagID = 0;
   bitCount = 0;
-  Serial.print("setup done");
-
+  Serial.print("pin setup done");
+  timeKeeper = 0;
+  
+  delay(1000);
+  startConnection();
+  Serial.print("ethernet setup done");
 }
 
 int lines;
@@ -81,9 +86,10 @@ void loop()
   //  See if it has been more than 1/4 second since the last bit arrived
   if (mode == 0) {
     if(bitCount > 0 && millis() - lastBitArrivalTime >  250){
+      timeKeeper = 0;
       Serial.print(bitCount, DEC);
       Serial.print(" bits: ");
-      Serial.print(tagID);
+      Serial.println(tagID);
       checkID(tagID);
       tagID = 0;
       bitCount = 0;
@@ -97,13 +103,13 @@ void loop()
       Serial.print(c);//debug
       if (c == '1') {
         validID();
-        client.stop();
-        mode = 0;
       } else if (c == '0') {
         invalidID();
-        client.stop();
+      } else {
+        //bad data 
+        Serial.println("Unknown character " + c);
         mode = 0;
-      } 
+      }
       // if the server's disconnected, stop the client:
       if (!client.connected()) {
         Serial.println("Disconnected");
@@ -112,43 +118,73 @@ void loop()
       }
     }
   }
+  if(timeKeeper < 1023){
+    timeKeeper++;
+  }
+  else {
+    timeKeeper = 0;
+    Serial.println("Timed Out. Resetting all the buffers.");
+    clearAllBuffers();
+  }
+  delay(10);
 }
-
-void checkID(unsigned long id) {
-  mode = 1;
-  lines = 0;
-  // start the Ethernet connection:
-  if (Ethernet.begin(mac) == 0) {
+void startConnection() {
+   if (Ethernet.begin(mac) == 0) {
     Serial.println("Failed to configure Ethernet using DHCP");
     // no point in carrying on, so do nothing forevermore:
     // try to congifure using IP address instead of DHCP:
     Ethernet.begin(mac, server);
   }
-  // give the Ethernet shield a second to initialize:
-  delay(1000);
   Serial.println("Connecting...");
 
   // if you get a connection, report back via serial:
   if (client.connect(server, 8124)) {
     Serial.println("Connected");
-    Serial.print("Checking id ");
-    Serial.println(id);
-    //sent id
-    client.println(id);
   } 
   else {
     // kf you didn't get a connection to the server:
     Serial.println("Connection failed");
-  }
-
+    clearAllBuffers();
+  } 
+}
+void checkID(unsigned long id) {
+  mode = 1;
+  lines = 0;
+  timeKeeper = 0;
+  
+  client.println(id);
 }
 void invalidID() {
    Serial.println("Invalid ID");
+   mode = 0;
 }
 void validID() {
   Serial.println("Valid ID");
   digitalWrite(ALLOWSODA, HIGH);
   delay(2000);
   digitalWrite(ALLOWSODA, LOW);
+  mode = 0;
+}
+
+void clearAllBuffers(){
+  bitCount = 0;
+  tagID = 0;
+  mode = 0;
+}
+// clears all interrupts
+void clearinterrupts () {
+  // the interrupt in the Atmel processor mises out the first negitave pulse as the inputs are already high,
+  // so this gives a pulse to each reader input line to get the interrupts working properly.
+  // Then clear out the reader variables.
+  // The readers are open collector sitting normally at a one so this is OK
+
+  for(int i = 2; i<4; i++){
+    pinMode(i, OUTPUT);
+    digitalWrite(i, HIGH); // enable internal pull up causing a one
+    digitalWrite(i, LOW); // disable internal pull up causing zero and thus an interrupt
+    pinMode(i, INPUT);
+    digitalWrite(i, HIGH); // enable internal pull up
+  }
+  delay(10);
 }
 
