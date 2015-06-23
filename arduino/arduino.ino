@@ -90,7 +90,11 @@ void loop()
       Serial.print(bitCount, DEC);
       Serial.print(" bits: ");
       Serial.println(tagID);
-      checkID(tagID);
+      if (tagID < 10 || bitCount != 35) {
+        clearAllBuffers();
+      } else {
+        checkID(tagID);
+      }
       tagID = 0;
       bitCount = 0;
     }
@@ -108,7 +112,6 @@ void loop()
       } else {
         //bad data 
         Serial.println("Unknown character " + c);
-        mode = 0;
       }
       // if the server's disconnected, stop the client:
       if (!client.connected()) {

@@ -52,7 +52,7 @@ net.createServer(function(sock) {
 		        }
 		    });
 		 } else {
-		 	sock.write("0");
+		 	sock.write("?");
 		 }
         
     });
