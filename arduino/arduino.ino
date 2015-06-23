@@ -3,7 +3,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define ALLOWSODA 6
+#define ALLOWSODA 6 //tells machine its okay to select soda
+#define DATA0 2
+#define DATA1 3
 
 volatile unsigned long tagID = 0;
 volatile unsigned long lastBitArrivalTime;
@@ -13,23 +15,27 @@ int timeKeeper;
 
 void ISRone(void)
 {
-  lastBitArrivalTime = millis();
   
-  if(bitCount >= 14 && bitCount <=33){
-  tagID <<= 1;
-  tagID |= 1;
+  if (mode == 0) {
+    lastBitArrivalTime = millis();
+    
+    if(bitCount >= 14 && bitCount <=33){
+    tagID <<= 1;
+    tagID |= 1;
+    }
+    bitCount++;
   }
-  bitCount++;
 }
 
 void ISRzero(void)
 {
-  lastBitArrivalTime = millis();
-  if(bitCount >= 14 && bitCount <=33){
-  tagID <<= 1;
+  if (mode == 0) {
+    lastBitArrivalTime = millis();
+    if(bitCount >= 14 && bitCount <=33){
+    tagID <<= 1;
+    }
+    bitCount++;
   }
-  bitCount++;
-  
 }
 
 
@@ -52,37 +58,32 @@ void setup() {
  // Open serial communications and wait for port to open:
   Serial.begin(9600);
   
+  delay(1000); //allow time for ethernet to like, start or something
   
   pinMode(ALLOWSODA, OUTPUT); //allow soda
   digitalWrite(ALLOWSODA, LOW);
-  
-  pinMode(4, OUTPUT); 
-  pinMode(5, OUTPUT); 
-  digitalWrite(4, LOW);
-  digitalWrite(5, HIGH);
 
-  pinMode(2, INPUT);
-  digitalWrite(2, HIGH);  // Enable pull-up resistor
-  attachInterrupt(0, ISRzero, FALLING);
+  pinMode(DATA0, INPUT);
+  digitalWrite(DATA0, HIGH);  // Enable pull-up resistor
+  attachInterrupt(0, ISRzero, FALLING); //they have to use interrupts 0 and 1 (only available), which are pins 2 & 3.
 
-  pinMode(3, INPUT);
-  digitalWrite(3, HIGH);  // Enable pull-up resistor
+  pinMode(DATA1, INPUT);
+  digitalWrite(DATA1, HIGH);  // Enable pull-up resistor
   attachInterrupt(1, ISRone,  FALLING);
 
   tagID = 0;
   bitCount = 0;
-  Serial.print("pin setup done");
   timeKeeper = 0;
   
-  delay(1000);
+  Serial.println("Pin setup done");
+  
   startConnection();
-  Serial.print("ethernet setup done");
+  Serial.println("Connection setup done");
 }
 
 int lines;
 void loop()
 {
-//  Serial.println(bitCount);
   //  See if it has been more than 1/4 second since the last bit arrived
   if (mode == 0) {
     if(bitCount > 0 && millis() - lastBitArrivalTime >  250){
@@ -104,7 +105,7 @@ void loop()
   if (mode == 1) {
     if (client.available()) {
       char c = client.read();
-      Serial.print(c);//debug
+      Serial.println("Server responded: " + c);//debug
       if (c == '1') {
         validID();
       } else if (c == '0') {
@@ -174,20 +175,3 @@ void clearAllBuffers(){
   tagID = 0;
   mode = 0;
 }
-// clears all interrupts
-void clearinterrupts () {
-  // the interrupt in the Atmel processor mises out the first negitave pulse as the inputs are already high,
-  // so this gives a pulse to each reader input line to get the interrupts working properly.
-  // Then clear out the reader variables.
-  // The readers are open collector sitting normally at a one so this is OK
-
-  for(int i = 2; i<4; i++){
-    pinMode(i, OUTPUT);
-    digitalWrite(i, HIGH); // enable internal pull up causing a one
-    digitalWrite(i, LOW); // disable internal pull up causing zero and thus an interrupt
-    pinMode(i, INPUT);
-    digitalWrite(i, HIGH); // enable internal pull up
-  }
-  delay(10);
-}
-
