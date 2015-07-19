@@ -45,14 +45,17 @@ net.createServer(function(sock) {
 					        	handleError(res, error);
 					        }
 							sock.write("1");
+					        console.log("Valid ID");
 					    });
 		        	} else {
 						sock.write("0");
+						console.log("Invalid ID");
 		        	}
 		        }
 		    });
 		 } else {
 		 	sock.write("?");
+			console.log("Wrong number of digits for a valid ID");
 		 }
         
     });
