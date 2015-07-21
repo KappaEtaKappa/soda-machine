@@ -6,12 +6,18 @@
 #define ALLOWSODA 6 //tells machine its okay to select soda
 #define DATA0 2
 #define DATA1 3
+#define SWITCHTIME 1000
 
 volatile unsigned long tagID = 0;
 volatile unsigned long lastBitArrivalTime;
 volatile int bitCount = 0;
+
+int failCount = 0;
 int mode = 0;
 int timeKeeper;
+
+//function that resets arduino.
+void(* resetFunc) (void) = 0; //declare reset function @ address 0
 
 void ISRone(void)
 {
@@ -69,15 +75,18 @@ void setup() {
   bitCount = 0;
   timeKeeper = 0;
   
-  Serial.println("Pin setup done");
+  Serial.println("Pin setup done.");
   
-  startConnection();
-  Serial.println("Connection setup done");
+  
 }
 
 int lines;
 void loop()
 {
+  //fix connection if dead, or start for first time
+  if (!client.connected()) {
+    startConnection();
+  }
   //  See if it has been more than 1/4 second since the last bit arrived
   if (mode == 0) {
     if(bitCount > 0 && millis() - lastBitArrivalTime >  250){
@@ -127,21 +136,31 @@ void loop()
   delay(10);
 }
 void startConnection() {
+  
+//  Serial.println("Initializing ethernet...");
    if (Ethernet.begin(mac) == 0) {
     Serial.println("Failed to configure Ethernet using DHCP");
     // no point in carrying on, so do nothing forevermore:
     // try to congifure using IP address instead of DHCP:
     Ethernet.begin(mac, server);
   }
-  Serial.println("Connecting...");
+//  Serial.println("Ethernet initialized.");
+  Serial.println("Connecting to soda server...");
 
   // if you get a connection, report back via serial:
   if (client.connect(server, 8124)) {
-    Serial.println("Connected");
+    Serial.println("Connected.");
+    failCount = 0;
   } 
   else {
     // kf you didn't get a connection to the server:
-    Serial.println("Connection failed");
+    Serial.println("Connection failed.");
+    
+    failCount++;
+    if (failCount >= 5) {
+      resetFunc();
+    }
+      
     clearAllBuffers();
     startConnection();
   } 
@@ -151,7 +170,7 @@ void checkID(unsigned long id) {
   lines = 0;
   timeKeeper = 0;
   
-  Serial.println("Checking ID ");
+  Serial.println("Checking ID: ");
   Serial.println(id); 
   client.println(id);
 }
@@ -162,7 +181,7 @@ void invalidID() {
 void validID() {
   Serial.println("Valid ID");
   digitalWrite(ALLOWSODA, HIGH);
-  delay(2000);
+  delay(SWITCHTIME);
   digitalWrite(ALLOWSODA, LOW);
   mode = 0;
 }
